@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""
+PATH - Display full paths
+Usage: PATH [--list] <target>
+"""
+
+import os
+import sys
+from pathlib import Path
+import tempfile
+from datetime import datetime
+
+def main():
+    if '-h' in sys.argv or '--help' in sys.argv or len(sys.argv) < 2:
+        print(__doc__)
+        sys.exit(0)
+    
+    # Parse arguments manually
+    target = sys.argv[-1]
+    list_mode = '--list' in sys.argv
+    
+    # Resolve path
+    if target == '.':
+        path = Path.cwd()
+    elif target == '~':
+        path = Path.home()
+    elif target.startswith('~/'):
+        path = Path.home() / target[2:]
+    else:
+        path = Path(target).resolve()
+    
+    if not path.exists():
+        print(f"Error: '{target}' not found")
+        sys.exit(1)
+    
+    # List mode
+    if list_mode:
+        files = []
+        if path.is_file():
+            files = [str(path)]
+        else:
+            for entry in path.iterdir():
+                if entry.is_file():
+                    files.append(str(entry.resolve()))
+        
+        files.sort()
+        
+        # Create list file
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_name = str(path).replace('/', '_')[:50]
+        list_file = Path(tempfile.gettempdir()) / f"paths_{safe_name}_{ts}.txt"
+        
+        with open(list_file, 'w') as f:
+            f.write('\n'.join(files))
+        
+        print(f"List: {len(files)} files -> {list_file}")
+        
+        # Show if requested
+        try:
+            if input("Show? [Y/n]: ").lower() in ('', 'y', 'yes'):
+                print(f"\n{path}:")
+                for f in files:
+                    print(f"  {f}")
+        except:
+            pass
+    
+    # Normal mode
+    else:
+        if path.is_dir():
+            print(f"{path}/")
+        else:
+            print(path)
+
+if __name__ == "__main__":
+    main()
