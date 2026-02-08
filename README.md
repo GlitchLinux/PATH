@@ -28,7 +28,7 @@ PATH --list .
 # Creates list of all files in current directory
 
 # Help
-pathutil -h
+PATH -h
 ```
 
 **Features:**
